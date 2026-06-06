@@ -34,27 +34,64 @@ navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
   hamburger.classList.remove('open');
 }));
 
-// Filters
+// Bento filters
 const filters = document.querySelectorAll('.filter');
 const cards = document.querySelectorAll('#bento .card');
-const filterMap = { all: null, posters: 'posters', social: 'social', video: 'video' };
 filters.forEach(btn => {
   btn.addEventListener('click', () => {
     filters.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const f = filterMap[btn.dataset.filter];
+    const f = btn.dataset.filter;
     cards.forEach(c => {
-      const show = !f || c.dataset.cat === f;
+      const show = f === 'all' || c.dataset.cat === f;
       c.style.display = show ? '' : 'none';
     });
+  });
+});
+
+// Carousel cards
+document.querySelectorAll('.carousel-card').forEach(card => {
+  const slides = card.querySelectorAll('.carousel-slide');
+  const counter = card.querySelector('.carousel-counter');
+  const prev = card.querySelector('.carousel-prev');
+  const next = card.querySelector('.carousel-next');
+  if (!slides.length) return;
+
+  let current = 0;
+
+  const go = (n) => {
+    slides[current].classList.remove('active');
+    current = (n + slides.length) % slides.length;
+    slides[current].classList.add('active');
+    if (counter) counter.textContent = `${current + 1} / ${slides.length}`;
+  };
+
+  prev?.addEventListener('click', (e) => { e.stopPropagation(); go(current - 1); });
+  next?.addEventListener('click', (e) => { e.stopPropagation(); go(current + 1); });
+
+  // Touch swipe
+  let startX = 0;
+  card.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; }, { passive: true });
+  card.addEventListener('touchend', (e) => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) go(current + (diff > 0 ? 1 : -1));
+  });
+});
+
+// LinkedIn "see more" toggle
+document.querySelectorAll('.li-see-more').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const body = btn.previousElementSibling;
+    const collapsed = body.classList.toggle('collapsed');
+    btn.textContent = collapsed ? '…see more' : 'see less';
   });
 });
 
 // Reveal on scroll
 const io = new IntersectionObserver((entries) => {
   entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
-}, { threshold: 0.12 });
-document.querySelectorAll('.section, .hero-inner, .card, .t-card').forEach(el => {
+}, { threshold: 0.1 });
+document.querySelectorAll('.section, .hero-inner, .card, .t-card, .video-link-card, .li-card').forEach(el => {
   el.classList.add('reveal'); io.observe(el);
 });
 
